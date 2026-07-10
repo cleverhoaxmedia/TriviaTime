@@ -26,6 +26,8 @@
     -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
     overflow:hidden;overscroll-behavior:none;
   }
+  .gone{display:none!important}
+
   .bg{position:fixed;inset:0;overflow:hidden;z-index:0}
   .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.45}
   .blob.b1{width:70vmax;height:70vmax;background:var(--pink);top:-30vmax;left:-25vmax}
@@ -33,7 +35,7 @@
 
   .app{
     position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column;
-    padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));gap:12px;
+    padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));gap:14px;
   }
   .view{display:none;flex:1;flex-direction:column;min-height:0}
   .view.on{display:flex}
@@ -58,42 +60,87 @@
   .btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--pink-dark)}
   .btn:disabled{opacity:.45;box-shadow:0 6px 0 var(--pink-dark)}
 
-  /* ===== play ===== */
-  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:0 0 auto}
-  .chip{
-    font-family:var(--display);font-weight:600;font-size:13px;color:#fff;
-    background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.14);
-    padding:6px 14px;border-radius:99px;max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  /* ===== play: hero name is the star of the show ===== */
+  #play{gap:12px}
+  .hero{flex:0 0 auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .hello{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+  .playername{
+    font-family:var(--display);font-weight:700;line-height:1;color:#fff;
+    font-size:clamp(34px,11vw,62px);text-shadow:0 5px 0 rgba(0,0,0,.25);
+    max-width:94vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    animation:namesway 5s ease-in-out infinite;
   }
-  .chip b{color:var(--gold)}
+  .playername.pop{animation:namepop .6s cubic-bezier(.2,1.7,.4,1),namesway 5s ease-in-out .6s infinite}
+  @keyframes namesway{0%,100%{transform:rotate(-.7deg)}50%{transform:rotate(.7deg)}}
+  @keyframes namepop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .meta{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:600;font-size:14px;color:rgba(255,255,255,.62);margin-top:2px}
+  .meta .sep{opacity:.4}
+  .meta b{color:var(--gold)}
+
   .status{
     flex:0 0 auto;text-align:center;font-family:var(--display);font-weight:600;
-    font-size:clamp(16px,4.6vw,22px);min-height:2.6em;display:grid;place-items:center;
+    font-size:clamp(17px,4.8vw,23px);min-height:1.5em;display:grid;place-items:center;
     padding:0 8px;line-height:1.25;
   }
   .status.good{color:var(--good)} .status.bad{color:var(--bad)} .status.wait{color:rgba(255,255,255,.55)}
 
-  .grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px}
+  /* ===== "eyes up" gate — shown until the display reveals the four answers ===== */
+  .eyesup{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center}
+  .eyesup .eyes{font-size:clamp(66px,24vw,132px);line-height:1;animation:eyesbob 2.2s ease-in-out infinite}
+  @keyframes eyesbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  .eyesup .eyestitle{font-family:var(--display);font-weight:700;font-size:clamp(30px,9vw,52px);color:var(--gold);text-shadow:0 4px 0 rgba(0,0,0,.22)}
+  .eyesup .eyessub{font-family:var(--display);font-weight:600;font-size:15px;color:rgba(255,255,255,.55)}
+
+  /* ===== answers: a spaced vertical stack, text and all ===== */
+  .answers{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:14px;justify-content:safe center;overflow-y:auto;padding:4px 2px}
   .ans{
-    position:relative;display:grid;place-items:center;border-radius:26px;cursor:pointer;
-    border:3px solid var(--edge);background:var(--fill);color:var(--edge);
-    font-family:var(--display);font-weight:700;font-size:clamp(44px,16vw,86px);line-height:1;
-    box-shadow:0 7px 0 var(--edge);
-    transition:transform .14s ease,box-shadow .14s ease,opacity .3s ease,filter .3s ease;
+    --fill:var(--pink-light);--edge:var(--pink);--deep:var(--pink-dark);
+    position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;
+    min-height:60px;padding:12px 16px;border-radius:20px;cursor:pointer;text-align:left;
+    border:3px solid var(--edge);background:var(--fill);color:var(--navy);
+    font-family:var(--display);font-weight:600;box-shadow:0 6px 0 var(--edge);
+    opacity:0;transform:translateY(16px) scale(.96);
+    transition:transform .14s ease,box-shadow .14s ease,filter .25s ease,opacity .25s ease,background .18s ease,color .18s ease;
   }
-  .ans:nth-child(1){--fill:var(--pink-light); --edge:var(--pink)}
-  .ans:nth-child(2){--fill:var(--blue-light); --edge:var(--blue)}
-  .ans:nth-child(3){--fill:var(--teal-light); --edge:var(--teal)}
-  .ans:nth-child(4){--fill:var(--purple-light);--edge:var(--purple)}
-  .ans:active:not(:disabled){transform:translateY(5px);box-shadow:0 2px 0 var(--edge)}
+  .ans:nth-child(1){--fill:var(--pink-light); --edge:var(--pink);  --deep:var(--pink-dark)}
+  .ans:nth-child(2){--fill:var(--blue-light); --edge:var(--blue);  --deep:var(--blue-dark)}
+  .ans:nth-child(3){--fill:var(--teal-light); --edge:var(--teal);  --deep:var(--teal-dark)}
+  .ans:nth-child(4){--fill:var(--purple-light);--edge:var(--purple);--deep:var(--purple-dark)}
+  .ans>*{position:relative;z-index:1}
+  .ans .letter{flex:0 0 auto;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--edge);color:#fff;font-weight:700;font-size:23px;line-height:1}
+  .ans .atext{flex:1;font-size:clamp(15px,4.2vw,19px);line-height:1.18;overflow-wrap:anywhere}
+  .ans .verdict{flex:0 0 auto;font-size:25px;font-weight:700;min-width:1ch;text-align:center}
+
+  /* staggered pop-in, one card every quarter second */
+  .answers.show .ans{animation:popin .4s cubic-bezier(.2,1.5,.35,1) both}
+  .answers.show .ans:nth-child(1){animation-delay:0s}
+  .answers.show .ans:nth-child(2){animation-delay:.25s}
+  .answers.show .ans:nth-child(3){animation-delay:.5s}
+  .answers.show .ans:nth-child(4){animation-delay:.75s}
+  @keyframes popin{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+
+  .ans:active:not(:disabled){transform:translateY(4px) scale(1);box-shadow:0 2px 0 var(--edge)}
   .ans:disabled{cursor:default}
-  .grid.locked .ans:not(.picked):not(.right){opacity:.3;filter:saturate(.5)}
-  .ans.picked{box-shadow:0 7px 0 var(--edge),0 0 0 5px var(--gold);opacity:1}
-  .ans.right{box-shadow:0 7px 0 var(--edge),0 0 0 5px var(--good);opacity:1}
-  .ans.wrong{box-shadow:0 7px 0 var(--edge),0 0 0 5px var(--bad);opacity:1}
-  .ans .verdict{position:absolute;top:8px;right:12px;font-size:26px;line-height:1;font-weight:700}
-  .ans.right .verdict{color:var(--good)}
-  .ans.wrong .verdict{color:var(--bad)}
+  .answers.locked .ans:not(.picked):not(.right){opacity:.32;filter:saturate(.55)}
+
+  /* reveal rings */
+  .ans.right{box-shadow:0 6px 0 var(--edge),0 0 0 4px var(--good)}
+  .ans.wrong{box-shadow:0 6px 0 var(--edge),0 0 0 4px var(--bad)}
+
+  /* armed answer: bold colour flip + a moving shimmer so there's no missing it */
+  .ans.picked{background:var(--edge);color:#fff;box-shadow:0 6px 0 var(--deep),0 0 0 4px var(--gold);transform:scale(1.02)}
+  .ans.picked .letter{background:#fff;color:var(--edge)}
+  .ans.picked .verdict{color:#fff}
+  .ans.picked.right{box-shadow:0 6px 0 var(--deep),0 0 0 4px var(--good)}
+  .ans.picked.wrong{box-shadow:0 6px 0 var(--deep),0 0 0 4px var(--bad)}
+  .ans.picked:not(.right):not(.wrong)::after{
+    content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);
+    background-size:250% 100%;animation:shimmer 1.5s linear infinite;
+  }
+  @keyframes shimmer{from{background-position:130% 0}to{background-position:-130% 0}}
+  .ans.right:not(.picked) .verdict{color:var(--good)}
+  .ans.wrong:not(.picked) .verdict{color:var(--bad)}
 
   /* ===== end ===== */
   #end{align-items:center;justify-content:center;gap:16px;text-align:center}
@@ -119,7 +166,10 @@
   }
   .toast.show{transform:translate(-50%,0);opacity:1}
 
-  @media (prefers-reduced-motion:reduce){*{transition-duration:.08s!important;animation:none!important}}
+  @media (prefers-reduced-motion:reduce){
+    *{transition-duration:.08s!important;animation:none!important}
+    .answers.show .ans{opacity:1!important;transform:none!important}
+  }
 </style>
 </head>
 <body>
@@ -138,17 +188,29 @@
 
     <!-- Play -->
     <section class="view" id="play">
-      <div class="top">
-        <div class="chip" id="who">—</div>
-        <div class="chip" id="qNum">Question —</div>
-        <div class="chip">Score <b id="score">0</b></div>
+      <header class="hero">
+        <div class="hello">You're playing as</div>
+        <div class="playername" id="who">—</div>
+        <div class="meta">
+          <span id="qNum">Get ready…</span>
+          <span class="sep">•</span>
+          <span>Score <b id="score">0</b></span>
+        </div>
+      </header>
+
+      <div class="status" id="status"></div>
+
+      <div class="eyesup" id="eyesup">
+        <div class="eyes">👀</div>
+        <div class="eyestitle" id="eyesTitle">Eyes Up!</div>
+        <div class="eyessub" id="eyesSub">Look at the screen</div>
       </div>
-      <div class="status wait" id="status">Waiting for the game to start…</div>
-      <div class="grid" id="grid">
-        <button class="ans" data-choice="0" disabled>A<span class="verdict"></span></button>
-        <button class="ans" data-choice="1" disabled>B<span class="verdict"></span></button>
-        <button class="ans" data-choice="2" disabled>C<span class="verdict"></span></button>
-        <button class="ans" data-choice="3" disabled>D<span class="verdict"></span></button>
+
+      <div class="answers gone" id="answers">
+        <button class="ans" data-choice="0"><span class="letter">A</span><span class="atext"></span><span class="verdict"></span></button>
+        <button class="ans" data-choice="1"><span class="letter">B</span><span class="atext"></span><span class="verdict"></span></button>
+        <button class="ans" data-choice="2"><span class="letter">C</span><span class="atext"></span><span class="verdict"></span></button>
+        <button class="ans" data-choice="3"><span class="letter">D</span><span class="atext"></span><span class="verdict"></span></button>
       </div>
     </section>
 

@@ -21,9 +21,10 @@ const $ = id => document.getElementById(id);
 const views  = { join: $("join"), play: $("play"), end: $("end") };
 const nameEl = $("name"), joinBtn = $("joinBtn"), joinHint = $("joinHint");
 const whoEl  = $("who"), qNumEl = $("qNum"), scoreEl = $("score");
-const statusEl = $("status"), gridEl = $("grid"), boardEl = $("board"), myPlaceEl = $("myPlace");
+const statusEl = $("status"), boardEl = $("board"), myPlaceEl = $("myPlace");
+const answersEl = $("answers"), eyesupEl = $("eyesup"), eyesTitleEl = $("eyesTitle"), eyesSubEl = $("eyesSub");
 const toastEl = $("toast");
-const buttons = [...gridEl.querySelectorAll(".ans")];
+const buttons = [...answersEl.querySelectorAll(".ans")];
 
 let uid = null;
 let name = localStorage.getItem("trivia.name") || "";
@@ -78,6 +79,8 @@ joinBtn.addEventListener("click", async () => {
     whoEl.textContent = name;
     onSnapshot(ref, s => { scoreEl.textContent = s.data()?.score ?? 0; });
     show("play");
+    // make the name land with a little bounce — kids love seeing it appear
+    whoEl.classList.remove("pop"); void whoEl.offsetWidth; whoEl.classList.add("pop");
     render();
     keepAwake();
   } catch (err) {
@@ -97,6 +100,7 @@ async function vote(choice) {
   myChoice = choice;
   sending = true;
   paintChoice();                     // optimistic: the tap must feel instant
+  render();                          // …and confirm "Locked in" without waiting on the network
   try {
     await setDoc(
       doc(db, "games", GAME_ID, "rounds", String(game.qIndex), "votes", uid),
@@ -105,6 +109,7 @@ async function vote(choice) {
   } catch (err) {
     myChoice = previous;             // rules rejected it — almost always a closed window
     paintChoice();
+    render();
     toast(game?.accepting ? "Vote didn't send. Try again." : "Too late — answers are closed!");
   } finally {
     sending = false;
@@ -118,11 +123,29 @@ function paintChoice() {
 function resetRound() {
   myChoice = null;
   sawOpen = false;
-  gridEl.classList.remove("locked");
+  answersEl.classList.remove("locked", "show");
   buttons.forEach(b => {
     b.classList.remove("picked", "right", "wrong");
     b.querySelector(".verdict").textContent = "";
   });
+}
+
+// Show the "eyes up" gate; hide the answer stack and status line.
+function showEyesUp(title, sub) {
+  eyesTitleEl.textContent = title || "Eyes Up!";
+  eyesSubEl.textContent   = sub != null ? sub : "Look at the screen";
+  eyesupEl.classList.remove("gone");
+  answersEl.classList.add("gone");
+  answersEl.classList.remove("show");
+  statusEl.classList.add("gone");
+}
+
+// Reveal the answer stack; `.show` fires the staggered pop-in (idempotent until resetRound).
+function enterAnswers() {
+  eyesupEl.classList.add("gone");
+  answersEl.classList.remove("gone");
+  answersEl.classList.add("show");
+  statusEl.classList.remove("gone");
 }
 
 // ===== render =====
@@ -133,9 +156,8 @@ function render() {
   if (views.join.classList.contains("on")) return;   // still on the name screen
 
   if (game.phase !== "playing") {
-    qNumEl.textContent = "Question —";
-    setStatus("Waiting for the game to start…", "wait");
-    buttons.forEach(b => b.disabled = true);
+    qNumEl.textContent = "Get ready…";
+    showEyesUp("Get Ready!", "The game's about to start");
     return;
   }
 
@@ -146,29 +168,38 @@ function render() {
     ? `Question ${game.qIndex + 1} of ${game.qTotal}`
     : `Question ${game.qIndex + 1}`;
 
+  // The four answer cards only appear once the display has opened voting for this
+  // question. Until then it's the "eyes up" gate. Once they've appeared they stay put
+  // through the drumroll and the reveal.
+  if (!sawOpen) { showEyesUp(); return; }
+
+  enterAnswers();
+
   const revealed = game.correctIndex !== null && game.correctIndex !== undefined;
   const open = game.accepting && !revealed;
+  const opts = game.options || [];
 
-  buttons.forEach(b => b.disabled = !open);
-  gridEl.classList.toggle("locked", !open);
+  buttons.forEach((b, i) => {
+    b.querySelector(".atext").textContent = opts[i] || "";
+    b.disabled = !open;
+  });
+  answersEl.classList.toggle("locked", !open);
 
   if (revealed) {
     const right = buttons[game.correctIndex];
     right.classList.add("right");
     right.querySelector(".verdict").textContent = "✓";
-    if (myChoice === null)                  setStatus("You sat this one out.", "wait");
+    if (myChoice === null)                   setStatus("You sat this one out.", "wait");
     else if (myChoice === game.correctIndex) setStatus("Correct! +1 🎉", "good");
     else {
       buttons[myChoice].classList.add("wrong");
       buttons[myChoice].querySelector(".verdict").textContent = "✗";
-      setStatus("Not this time — look up! 👀", "bad");
+      setStatus("So close! Look up 👀", "bad");
     }
   } else if (open) {
-    setStatus(myChoice === null ? "Pick your answer!" : "Locked in — you can still change it.");
-  } else if (sawOpen) {
-    setStatus(myChoice === null ? "Answers closed. 🥁" : "Answers closed — drumroll… 🥁", "wait");
+    setStatus(myChoice === null ? "Tap your answer!" : "Locked in — tap another to change");
   } else {
-    setStatus("Look up at the screen… 👀", "wait");
+    setStatus(myChoice === null ? "Answers closed 🥁" : "Locked in! Drumroll… 🥁", "wait");
   }
 }
 
