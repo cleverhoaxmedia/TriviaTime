@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#160f3b">
+<title>LPSMinicon Trivia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* palette lifted from the display so a phone button reads as the same object as its card */
+  :root{
+    --pink:#d4197a;  --pink-light:#fce8f3; --pink-mid:#f5b8d8; --pink-dark:#8f0f52;
+    --blue:#1d5cb8;  --blue-light:#e4eef9; --blue-dark:#0f3a78;
+    --teal:#0ab5c0;  --teal-light:#dff6f8; --teal-dark:#066e76;
+    --purple:#7246be;--purple-light:#ede6f9;--purple-dark:#42287a;
+    --navy:#160f3b;  --gold:#ffd34d; --good:#2fbf6d; --bad:#e0405c;
+    --display:'Fredoka','Nunito',system-ui,sans-serif;
+    --body:'Nunito',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--navy);color:#fff;font-family:var(--body);
+    -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+    overflow:hidden;overscroll-behavior:none;
+  }
+  .bg{position:fixed;inset:0;overflow:hidden;z-index:0}
+  .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.45}
+  .blob.b1{width:70vmax;height:70vmax;background:var(--pink);top:-30vmax;left:-25vmax}
+  .blob.b2{width:60vmax;height:60vmax;background:var(--blue);bottom:-28vmax;right:-20vmax}
+
+  .app{
+    position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column;
+    padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));gap:12px;
+  }
+  .view{display:none;flex:1;flex-direction:column;min-height:0}
+  .view.on{display:flex}
+
+  /* ===== join ===== */
+  #join{align-items:center;justify-content:center;gap:20px;text-align:center}
+  .mark{font-family:var(--display);font-weight:700;line-height:.95;font-size:clamp(34px,11vw,58px);text-shadow:0 6px 0 rgba(0,0,0,.22)}
+  .mark .lps{color:var(--pink)}
+  .tag{font-family:var(--display);font-weight:600;color:var(--gold);font-size:clamp(17px,5vw,26px)}
+  .sub{color:rgba(255,255,255,.6);font-weight:600;font-size:14px;max-width:30ch;line-height:1.5}
+  #name{
+    width:min(360px,88vw);padding:16px 20px;border-radius:18px;text-align:center;
+    font-family:var(--display);font-weight:600;font-size:20px;color:var(--navy);
+    background:#fff;border:3px solid var(--pink-mid);outline:none;
+  }
+  #name:focus{border-color:var(--gold)}
+  .btn{
+    width:min(360px,88vw);padding:16px 20px;border-radius:18px;border:3px solid var(--pink);
+    background:var(--pink);color:#fff;font-family:var(--display);font-weight:700;font-size:20px;
+    box-shadow:0 6px 0 var(--pink-dark);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--pink-dark)}
+  .btn:disabled{opacity:.45;box-shadow:0 6px 0 var(--pink-dark)}
+
+  /* ===== play ===== */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:0 0 auto}
+  .chip{
+    font-family:var(--display);font-weight:600;font-size:13px;color:#fff;
+    background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.14);
+    padding:6px 14px;border-radius:99px;max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .chip b{color:var(--gold)}
+  .status{
+    flex:0 0 auto;text-align:center;font-family:var(--display);font-weight:600;
+    font-size:clamp(16px,4.6vw,22px);min-height:2.6em;display:grid;place-items:center;
+    padding:0 8px;line-height:1.25;
+  }
+  .status.good{color:var(--good)} .status.bad{color:var(--bad)} .status.wait{color:rgba(255,255,255,.55)}
+
+  .grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px}
+  .ans{
+    position:relative;display:grid;place-items:center;border-radius:26px;cursor:pointer;
+    border:3px solid var(--edge);background:var(--fill);color:var(--edge);
+    font-family:var(--display);font-weight:700;font-size:clamp(44px,16vw,86px);line-height:1;
+    box-shadow:0 7px 0 var(--edge);
+    transition:transform .14s ease,box-shadow .14s ease,opacity .3s ease,filter .3s ease;
+  }
+  .ans:nth-child(1){--fill:var(--pink-light); --edge:var(--pink)}
+  .ans:nth-child(2){--fill:var(--blue-light); --edge:var(--blue)}
+  .ans:nth-child(3){--fill:var(--teal-light); --edge:var(--teal)}
+  .ans:nth-child(4){--fill:var(--purple-light);--edge:var(--purple)}
+  .ans:active:not(:disabled){transform:translateY(5px);box-shadow:0 2px 0 var(--edge)}
+  .ans:disabled{cursor:default}
+  .grid.locked .ans:not(.picked):not(.right){opacity:.3;filter:saturate(.5)}
+  .ans.picked{box-shadow:0 7px 0 var(--edge),0 0 0 5px var(--gold);opacity:1}
+  .ans.right{box-shadow:0 7px 0 var(--edge),0 0 0 5px var(--good);opacity:1}
+  .ans.wrong{box-shadow:0 7px 0 var(--edge),0 0 0 5px var(--bad);opacity:1}
+  .ans .verdict{position:absolute;top:8px;right:12px;font-size:26px;line-height:1;font-weight:700}
+  .ans.right .verdict{color:var(--good)}
+  .ans.wrong .verdict{color:var(--bad)}
+
+  /* ===== end ===== */
+  #end{align-items:center;justify-content:center;gap:16px;text-align:center}
+  .board{width:min(420px,92vw);display:flex;flex-direction:column;gap:7px;max-height:56vh;overflow-y:auto}
+  .board .row{
+    display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:15px;
+    background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.14);
+    font-family:var(--display);font-weight:600;font-size:16px;
+  }
+  .board .row.me{border-color:var(--pink-mid);background:rgba(212,25,122,.18)}
+  .board .row:first-child{background:rgba(255,211,77,.15);border-color:var(--gold)}
+  .board .rank{width:2.2ch;text-align:right;color:var(--gold)}
+  .board .nm{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .board .pts{color:var(--pink-mid)}
+
+  /* translateY alone can't clear the `bottom` offset, so opacity does the hiding */
+  .toast{
+    position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,140%);
+    z-index:9;background:var(--bad);color:#fff;font-family:var(--display);font-weight:600;font-size:14px;
+    padding:10px 18px;border-radius:99px;max-width:88vw;text-align:center;
+    opacity:0;pointer-events:none;
+    transition:transform .3s cubic-bezier(.2,1.4,.4,1),opacity .2s ease;
+  }
+  .toast.show{transform:translate(-50%,0);opacity:1}
+
+  @media (prefers-reduced-motion:reduce){*{transition-duration:.08s!important;animation:none!important}}
+</style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div></div>
+
+  <div class="app">
+    <!-- Join -->
+    <section class="view on" id="join">
+      <div class="mark"><span class="lps">LPS</span>Minicon</div>
+      <div class="tag">Trivia Time</div>
+      <input id="name" type="text" maxlength="20" autocomplete="off" autocapitalize="words"
+             spellcheck="false" placeholder="Your name" aria-label="Your name">
+      <button class="btn" id="joinBtn" disabled>Connecting…</button>
+      <div class="sub" id="joinHint">Pick a name the room will recognise.</div>
+    </section>
+
+    <!-- Play -->
+    <section class="view" id="play">
+      <div class="top">
+        <div class="chip" id="who">—</div>
+        <div class="chip" id="qNum">Question —</div>
+        <div class="chip">Score <b id="score">0</b></div>
+      </div>
+      <div class="status wait" id="status">Waiting for the game to start…</div>
+      <div class="grid" id="grid">
+        <button class="ans" data-choice="0" disabled>A<span class="verdict"></span></button>
+        <button class="ans" data-choice="1" disabled>B<span class="verdict"></span></button>
+        <button class="ans" data-choice="2" disabled>C<span class="verdict"></span></button>
+        <button class="ans" data-choice="3" disabled>D<span class="verdict"></span></button>
+      </div>
+    </section>
+
+    <!-- End -->
+    <section class="view" id="end">
+      <div class="tag">🏆 Final Scores</div>
+      <div class="board" id="board"></div>
+      <div class="sub" id="myPlace"></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
