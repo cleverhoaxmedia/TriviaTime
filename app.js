@@ -51,7 +51,8 @@ function fitText(btn) {
   const bw = box.clientWidth, bh = box.clientHeight;
   if (!bw || !bh) return;
   const over = () => fit.scrollWidth > bw + 0.5 || fit.scrollHeight > bh + 0.5;
-  let lo = 13, hi = 60;             // let short answers get big and chunky in the tall box
+  let lo = 10, hi = 60;             // let short answers get big and chunky in the tall box;
+                                    // low floor lets a long unbreakable word shrink to fit width
   box.style.fontSize = hi + "px";
   if (over()) {
     while (hi - lo > 0.5) {

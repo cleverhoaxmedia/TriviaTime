@@ -114,7 +114,9 @@
     font-size:clamp(23px,7vw,32px);line-height:1;
   }
   .ans .atext{flex:1;min-width:0;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:26px}
-  .ans .atext .fit{width:100%;text-align:center;font-weight:700;line-height:1.03;overflow-wrap:anywhere}
+  /* break lines only between words, never inside one; the JS fitter shrinks a too-wide
+     single word to fit rather than splitting it */
+  .ans .atext .fit{width:100%;text-align:center;font-weight:700;line-height:1.03;overflow-wrap:normal;word-break:normal;hyphens:none}
   .ans .verdict{flex:0 0 auto;min-width:1.1ch;font-size:clamp(23px,7vw,32px);font-weight:700;text-align:center}
 
   /* staggered pop-in, one card every quarter second */
